@@ -1990,7 +1990,15 @@ void setup(void) {
 	 * Xcursor themes to source cursor images from and makes sure that cursor
 	 * images are available at all scale factors on the screen (necessary for
 	 * HiDPI support). Scaled cursors will be loaded with each output. */
+#if CURSORTHEME_PATCH
+	unsigned int cursor_size = 24;
+	char *xcursor_size = getenv("XCURSOR_SIZE");
+	if (xcursor_size)
+		cursor_size = atoi(xcursor_size);
+	cursor_mgr = wlr_xcursor_manager_create(getenv("XCURSOR_THEME"), cursor_size);
+#else
 	cursor_mgr = wlr_xcursor_manager_create(NULL, 24);
+#endif
 
 	/*
 	 * wlr_cursor *only* displays an image on screen. It does not move around

@@ -29,3 +29,8 @@
 /* Hide the border when only one window is visible.
  */
 #define NOBORDER_PATCH 1
+
+/* Allow specifying cursor theme through XCURSOR_THEME and XCURSOR_SIZE
+ * environment variables.
+ */
+#define CURSORTHEME_PATCH 1
