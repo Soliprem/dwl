@@ -199,6 +199,12 @@ struct Monitor {
 	struct wlr_box w;		  /* window area, layout-relative */
 	struct wl_list layers[4]; /* LayerSurface::link */
 	const Layout *lt[2];
+#if VANITYGAPS_PATCH
+	int gappih; /* horizontal gap between windows */
+	int gappiv; /* vertical gap between windows */
+	int gappoh; /* horizontal outer gaps */
+	int gappov; /* vertical outer gaps */
+#endif
 	unsigned int seltags;
 	unsigned int sellt;
 	unsigned int tagset[2];
@@ -895,6 +901,13 @@ void createmon(struct wl_listener *listener, void *data) {
 	/* Initialize monitor state using configured rules */
 	for (size_t i = 0; i < LENGTH(m->layers); i++)
 		wl_list_init(&m->layers[i]);
+
+#if VANITYGAPS_PATCH
+	m->gappih = gappih;
+	m->gappiv = gappiv;
+	m->gappoh = gappoh;
+	m->gappov = gappov;
+#endif
 	m->tagset[0] = m->tagset[1] = 1;
 	for (r = monrules; r < END(monrules); r++) {
 		if (!r->name || strstr(wlr_output->name, r->name)) {
@@ -2117,6 +2130,10 @@ void tagmon(const Arg *arg) {
 
 void tile(Monitor *m) {
 	unsigned int i, n = 0, h, mw, my, ty;
+#if VANITYGAPS_PATCH
+	unsigned int r, oe = enablegaps, ie = enablegaps;
+#endif
+
 	Client *c;
 
 	wl_list_for_each(c, &clients, link) {
@@ -2126,22 +2143,41 @@ void tile(Monitor *m) {
 	if (n == 0)
 		return;
 
+	if (smartgaps == n) {
+		oe = 0;	 // outer gaps disabled
+	}
+
 	if (n > m->nmaster)
-		mw = m->nmaster ? m->w.width * m->mfact : 0;
+		mw = m->nmaster ? (m->w.width + (m->gappiv * ie) * VANITYGAPS_PATCH) * m->mfact : 0;
 	else
-		mw = m->w.width;
-	i = my = ty = 0;
+		mw = m->w.width - (2 * m->gappov * oe - m->gappiv * ie) * VANITYGAPS_PATCH;
+	i = 0;
+	my = ty = m->gappoh * oe * VANITYGAPS_PATCH;
 	wl_list_for_each(c, &clients, link) {
 		if (!VISIBLEONMON(c, m) || c->isfloating || c->isfullscreen)
 			continue;
 		if (i < m->nmaster) {
+#if VANITYGAPS_PATCH
+			r = MIN(n, m->nmaster) - i;
+			h = (m->w.height - my - m->gappoh * oe - m->gappih * ie * (r - 1)) / r;
+			resize(c, m->w.x + m->gappov * oe, m->w.y + my, mw - m->gappiv * ie, h, 0);
+			my += c->geom.height + m->gappih * ie;
+#else
 			h = (m->w.height - my) / (MIN(n, m->nmaster) - i);
 			resize(c, m->w.x, m->w.y + my, mw, h, 0);
 			my += c->geom.height;
+#endif
 		} else {
+#if VANITYGAPS_PATCH
+			r = n - i;
+			h = (m->w.height - ty - m->gappoh * oe - m->gappih * ie * (r - 1)) / r;
+			resize(c, m->w.x + mw + m->gappov * oe, m->w.y + ty, m->w.width - mw - 2 * m->gappov * oe, h, 0);
+			ty += c->geom.height + m->gappih * ie;
+#else
 			h = (m->w.height - ty) / (n - i);
 			resize(c, m->w.x + mw, m->w.y + ty, m->w.width - mw, h, 0);
 			ty += c->geom.height;
+#endif
 		}
 		i++;
 	}

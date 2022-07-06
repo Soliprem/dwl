@@ -9,3 +9,7 @@
 #if SHIFTVIEW_PATCH
 #include "shiftview.h"
 #endif
+
+#if VANITYGAPS_PATCH
+#include "vanitygaps.h"
+#endif

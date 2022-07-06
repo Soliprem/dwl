@@ -34,3 +34,7 @@
  * environment variables.
  */
 #define CURSORTHEME_PATCH 1
+
+/* Allow specifying outer and inner gaps for windows.
+ */
+#define VANITYGAPS_PATCH 1
