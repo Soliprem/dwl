@@ -10,11 +10,14 @@ static const float focuscolor[]     = {1.0, 0.0, 0.0, 1.0};
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
 static const Rule rules[] = {
-	/* app_id     title       tags mask     isfloating   monitor */
+	/* app_id     title       tags mask     isfloating   isterminal    noswallow    monitor */
 	/* examples:
-	{ "Gimp",     NULL,       0,            1,           -1 },
+	RULE(.id = "Gimp", .isfloating = 1, .noswallow = 1)
 	*/
-	{ "firefox",  NULL,       1 << 8,       0,           -1 },
+	RULE(.id = "brave", .tags = 1 << 8),
+#if SWALLOW_PATCH
+	RULE(.id = "foot", .isterminal = 1)
+#endif
 };
 
 /* layout(s) */
@@ -55,6 +58,9 @@ static const int natural_scrolling = 0;
 static const int disable_while_typing = 1;
 static const int left_handed = 0;
 static const int middle_button_emulation = 0;
+#if UNCLUTTER_PATCH
+static const int cursor_timeout = 5;
+#endif
 /* You can choose between:
 LIBINPUT_CONFIG_SCROLL_NO_SCROLL
 LIBINPUT_CONFIG_SCROLL_2FG
@@ -96,8 +102,8 @@ static const double accel_speed = 0.0;
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static const char *termcmd[] = { "alacritty", NULL };
-static const char *menucmd[] = { "bemenu-run", NULL };
+static const char *termcmd[] = { "foot", NULL };
+static const char *menucmd[] = { "rofi", "-show", "run", NULL };
 
 static const Key keys[] = {
 	/* Note that Shift changes certain key codes: c -> C, 2 -> at, etc. */
@@ -141,6 +147,11 @@ static const Key keys[] = {
 #define CHVT(n) { WLR_MODIFIER_CTRL|WLR_MODIFIER_ALT,XKB_KEY_XF86Switch_VT_##n, chvt, {.ui = (n)} }
 	CHVT(1), CHVT(2), CHVT(3), CHVT(4), CHVT(5), CHVT(6),
 	CHVT(7), CHVT(8), CHVT(9), CHVT(10), CHVT(11), CHVT(12),
+
+#if SHIFTVIEW_PATCH
+	{ MODKEY,                    XKB_KEY_semicolon,          shiftview,      { .i = -1 } },
+	{ MODKEY,                    XKB_KEY_apostrophe,         shiftview,      { .i = 1 } },
+#endif
 };
 
 static const Button buttons[] = {
