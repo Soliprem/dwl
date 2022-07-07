@@ -1693,14 +1693,17 @@ void resize(Client *c, int x, int y, int w, int h, int interact) {
 	c->bw = borderpx;
 
 #if NOBORDER_PATCH
-	unsigned int n = 0;
 	Client *tmp;
 	wl_list_for_each(tmp, &clients, link) {
-		if (VISIBLEONMON(tmp, c->mon) && !tmp->isfloating)
-			n++;
+		if (!VISIBLEONMON(tmp, c->mon) || tmp->isfloating)
+			continue;
+		if (tmp != c) {
+			tmp = NULL;
+			break;
+		}
 	}
 
-	if ((n == 1 || &monocle == c->mon->lt[c->mon->sellt]->arrange) &&
+	if ((tmp != NULL || &monocle == c->mon->lt[c->mon->sellt]->arrange) &&
 		!c->isfullscreen &&
 		!c->isfloating &&
 		c->mon->lt[c->mon->sellt]->arrange) {
