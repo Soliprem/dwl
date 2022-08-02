@@ -1384,11 +1384,7 @@ void mapnotify(struct wl_listener *listener, void *data) {
 	c->geom.height += 2 * c->bw;
 
 	/* Insert this client into client lists. */
-	if (clients.prev)
-		// tile at the bottom
-		wl_list_insert(clients.prev, &c->link);
-	else
-		wl_list_insert(&clients, &c->link);
+	wl_list_insert(&clients, &c->link);
 	wl_list_insert(&fstack, &c->flink);
 
 	/* Set initial monitor, tags, floating status, and focus */
@@ -2426,7 +2422,7 @@ void configurex11(struct wl_listener *listener, void *data) {
 void createnotifyx11(struct wl_listener *listener, void *data) {
 	struct wlr_xwayland_surface *xwayland_surface = data;
 	Client *c;
-	wl_list_for_each(c, &clients, link) if (c->isfullscreen && VISIBLEONMON(c, c->mon))
+	wl_list_for_each(c, &clients, link) if (c->isfullscreen && VISIBLEON(c, c->mon))
 		setfullscreen(c, 0);
 
 	/* Allocate a Client for this surface */
